@@ -32,3 +32,7 @@ I CTRL + F'd `pallet_template` and verified that:
 My first instinct was to remove the whole `pallet/template` directory and the code lines listed above. But I decided to keep the directory and comment out items 1 to 4 to exclude the custom pallet from the runtime.  
 
 Extra: I went to [Polkadot App](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.polkadot.io#/explorer) and switched to Development/Local Node 127.0.0.1:9944. Then, in the Developer/Extrinsic section, I checked that the template pallet was no longer available as an option in the pallet selector.  
+
+## Step 3. Create new pallet `kitties`
+I created the kitties directory with a Cargo file and a `src/lib.rs` file where the kitties module are defined and decorated with the `pallet` macro. Mandatory `pallet::config` and `pallet::pallet` attributes are defined too. They will be parsed by the `pallet` macro.  
+Then, I added the kitties pallet as a dependency to the runtime Cargo file and updated `runtime/src/lib.rs` to include the kitties pallet.
