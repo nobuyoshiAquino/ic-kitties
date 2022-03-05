@@ -15,7 +15,8 @@ $ cargo run --release -- --dev
 **to-do**: Explain flag `--release`.  
 **to-do**: Explain flag `--` and `--dev`.
 
-So like this, I got a base project that works locally and can be built upon it.
+So like this, I got a base project that works locally and can be built upon it.  
+<br />
 
 ## Step 2. Explore `Runtime` and find `TemplateModule`
 I knew two things in advance. First, I knew that `runtime/src/lib.rs` is the file where pallets are added to the runtime through the `construct_runtime!` macro.  
@@ -32,7 +33,41 @@ I CTRL + F'd `pallet_template` and verified that:
 My first instinct was to remove the whole `pallet/template` directory and the code lines listed above. But I decided to keep the directory and comment out items 1 to 4 to exclude the custom pallet from the runtime.  
 
 Extra: I went to [Polkadot App](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.polkadot.io#/explorer) and switched to Development/Local Node 127.0.0.1:9944. Then, in the Developer/Extrinsic section, I checked that the template pallet was no longer available as an option in the pallet selector.  
+<br />
 
 ## Step 3. Create new pallet `kitties`
+Before starting, I should answer some basic questions for my readers. First,  
+- What is the `kitties` pallet? and,
+- What is a **kitty**?  
+
+A kitty is the representation of a unique collectable virtual cat.  
+With the `kitties` pallet, you can **create**, **breed**, **buy** and **sell** kitties.  
+
+**to-do**: Add kitty's pictures here.  
+<br />
+
+### User Stories
+I rephrased the project's first requirements as user stories.
+1. "*As a user, I want to create a kitty and own it.*"  
+    1.1. A kitty must have a randomly created DNA property.  
+<br />
+2. "*As a user, I want to breed a kitty from two kitties of different genders (female + male) that I own.*"  
+    2.1. A kitty must have a DNA property created based on its parent's DNA.  
+    2.2. A kitty's gender must be derived from its DNA.  
+<br />
+
+### Scaffolding
 I created the kitties directory with a Cargo file and a `src/lib.rs` file where the kitties module are defined and decorated with the `pallet` macro. Mandatory `pallet::config` and `pallet::pallet` attributes are defined too. They will be parsed by the `pallet` macro.  
-Then, I added the kitties pallet as a dependency to the runtime Cargo file and updated `runtime/src/lib.rs` to include the kitties pallet.
+Then, I added the kitties pallet as a dependency to the runtime Cargo file and updated `runtime/src/lib.rs` to include the kitties pallet.  
+<br />
+
+### Coding
+Based on user stories' requirements 1.1. and 1.2., a `Kitty` will be defined as a tuple struct with a single field for its DNA.  
+
+I created two storage items: 
+- `NextKittyId`, an index value assigned as an identifier for each new kitty created.
+- `Kitties`, a key-value mapping where the user id: `<AccountId>` and the kitty id: `<KittyIndex>` are the keys.  
+
+Finally, I created the `create()` call where a new kitty is created and inserted in the `Kitties` key-value mapping. A `KittyCreated` event is sent on success.
+
+
