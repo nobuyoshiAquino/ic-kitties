@@ -61,13 +61,32 @@ I created the kitties directory with a Cargo file and a `src/lib.rs` file where 
 Then, I added the kitties pallet as a dependency to the runtime Cargo file and updated `runtime/src/lib.rs` to include the kitties pallet.  
 <br />
 
-### Coding
-Based on user stories' requirements 1.1. and 1.2., a `Kitty` will be defined as a tuple struct with a single field for its DNA.  
+### Implement `create` kitty call
+Based on user stories' requirements 1.1., a `Kitty` will be defined as a tuple struct with a single field for its DNA.  
 
 I created two storage items: 
 - `NextKittyId`, an index value assigned as an identifier for each new kitty created.
 - `Kitties`, a key-value mapping where the user id: `<AccountId>` and the kitty id: `<KittyIndex>` are the keys.  
 
-Finally, I created the `create()` call where a new kitty is created and inserted in the `Kitties` key-value mapping. A `KittyCreated` event is sent on success.
+Finally, I created the `create` call where a new kitty is created and inserted in the `Kitties` key-value mapping.  
+A `KittyCreated` event is sent on success.  
+<br />
 
+### Implement `breed` kitty call
+The `breed` and `create` calls are similar. Both result in the creation of a kitty.   
+But, the `breed` call is different from `create` call because:
+- I must generate the new kitty's DNA based on its parents' DNA. 
+- I have to ensure that the kitties, provided as parameters, have different genders and are owned by the sender.
 
+So, for the `breed` call I created:
+  - `KittyGender` enum with two variants: `Female` and `Male`.
+  - `gender(&self) -> KittyGender` method to get a kitty's gender (requirement 2.2).
+  - `combine_kitties_dna(s: AccountId, k1: Dna, k2: Dna) -> Dna` function to create the new kitty's DNA based on its parents DNA (requirement 2.1).
+
+As stated above, `breed` does the same process of `create` call on
+- getting an ID for the new kitty querying the `NextKittyId` storage value,
+- generating a DNA,
+- inserting the new kitty to the `Kitties` mapping with the user and kitty IDs as keys, and
+- emitting an event on success (`KittyCreatedByBreeding`).
+
+I added a couple of unit tests too.  
