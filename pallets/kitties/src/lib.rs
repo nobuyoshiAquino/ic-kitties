@@ -66,6 +66,8 @@ pub mod pallet {
 		KittyCreated(T::AccountId, T::KittyIndex, Kitty),
 		/// A kitty is created from a breeding pair. \[owner, kitty_id, kitty\]
 		KittyCreatedByBreeding(T::AccountId, T::KittyIndex, Kitty),
+		/// A kitty has been transferred to another user. \[from, to, kitty_id\]
+		KittyTransferred(T::AccountId, T::AccountId, T::KittyIndex),
 	}
 
 	// --- ERRORS ---
@@ -119,6 +121,30 @@ pub mod pallet {
 			Self::deposit_event(Event::KittyCreatedByBreeding(sender, kitty_id, kitty));
 
 			Ok(())
+		}
+
+		/// Transfer a kitty to a new owner
+		#[pallet::weight(1000)]
+		pub fn transfer(
+			origin: OriginFor<T>,
+			to: T::AccountId,
+			kitty_id: T::KittyIndex,
+		) -> DispatchResult {
+			let sender = ensure_signed(origin)?;
+
+			Kitties::<T>::try_mutate_exists(sender.clone(), kitty_id, |kitty| -> DispatchResult {
+				if sender == to {
+					ensure!(kitty.is_some(), Error::<T>::InvalidKittyId);
+					return Ok(());
+				}
+
+				let kitty = kitty.take().ok_or(Error::<T>::InvalidKittyId)?;
+				Kitties::<T>::insert(&to, kitty_id, kitty);
+
+				Self::deposit_event(Event::KittyTransferred(sender, to, kitty_id));
+
+				Ok(())
+			})
 		}
 	}
 }

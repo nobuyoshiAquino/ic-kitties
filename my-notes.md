@@ -90,3 +90,13 @@ As stated above, `breed` does the same process of `create` call on
 - emitting an event on success (`KittyCreatedByBreeding`).
 
 I added a couple of unit tests too.  
+<br />  
+
+### Implement `transfer` kitty call
+The next feature is defined in the following user story.
+
+3. "*As a user, I want to transfer my kitty to another user.*"  
+    3.1. Transfers where the sender and the receiver is the same user, should not end in an error.  
+
+For the `transfer` call, I did not introduce new concepts. It's a simple mutation on kitties mappings where I take (remove) the entry with the old user (sender) and insert a new one with the recipient user. An event is emitted on success.  
+I also added unit tests.
