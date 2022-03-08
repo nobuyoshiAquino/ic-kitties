@@ -35,7 +35,7 @@ My first instinct was to remove the whole `pallet/template` directory and the co
 Extra: I went to [Polkadot App](https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.polkadot.io#/explorer) and switched to Development/Local Node 127.0.0.1:9944. Then, in the Developer/Extrinsic section, I checked that the template pallet was no longer available as an option in the pallet selector.  
 <br />
 
-## Step 3. Create new pallet `kitties`
+## Step 3. Create `Kitties` pallet :cat2:
 Before starting, I should answer some basic questions for my readers. First,  
 - What is the `kitties` pallet? and,
 - What is a **kitty**?  
@@ -61,7 +61,7 @@ I created the kitties directory with a Cargo file and a `src/lib.rs` file where 
 Then, I added the kitties pallet as a dependency to the runtime Cargo file and updated `runtime/src/lib.rs` to include the kitties pallet.  
 <br />
 
-### Implement `create` kitty call
+### Implement `create` kitty call :small_blue_diamond:
 Based on user stories' requirements 1.1., a `Kitty` will be defined as a tuple struct with a single field for its DNA.  
 
 I created two storage items: 
@@ -72,7 +72,7 @@ Finally, I created the `create` call where a new kitty is created and inserted i
 A `KittyCreated` event is sent on success.  
 <br />
 
-### Implement `breed` kitty call
+### Implement `breed` kitty call :small_blue_diamond:
 The `breed` and `create` calls are similar. Both result in the creation of a kitty.   
 But, the `breed` call is different from `create` call because:
 - I must generate the new kitty's DNA based on its parents' DNA. 
@@ -92,11 +92,26 @@ As stated above, `breed` does the same process of `create` call on
 I added a couple of unit tests too.  
 <br />  
 
-### Implement `transfer` kitty call
+### Implement `transfer` kitty call :small_blue_diamond:
 The next feature is defined in the following user story.
 
 3. "*As a user, I want to transfer my kitty to another user.*"  
     3.1. Transfers where the sender and the receiver is the same user, should not end in an error.  
 
-For the `transfer` call, I did not introduce new concepts. It's a simple mutation on kitties mappings where I take (remove) the entry with the old user (sender) and insert a new one with the recipient user. An event is emitted on success.  
-I also added unit tests.
+For the `transfer` call, I did not introduce new concepts. It's a simple mutation on kitties mapping where I take (remove) the entry with the old user (sender) and insert a new one with the recipient user. An event is emitted on success.  
+I also added unit tests.  
+<br />
+
+### Implement `set_price` and `buy` kitty calls :small_blue_diamond:
+In the beginning, I said that users would be able to sell and buy kitties too. So now I'm going to implement the last features of the `Kitties` pallet, and the user stories are the following:  
+
+4. "*As a user, I want to put my kitties on sale.*"  
+    4.1. User must set a price for the kitty to make it available to the public.
+
+5. "*As a user, I want to take my kitty off the market.*"  
+6. "*As a user, I want to buy a kitty.*"
+
+I implemented requirements 4 and 5 in the same `set_price` call. A user can call `set_price` to set a kitty's price and make it available. If the kitty is already on sale, the user can either update its price or delist it passing `None` as the price.
+
+To keep track of the kitties on sale, I created the `KittyPrices` storage map that has the kitty's id as key and the price as value. This price value is a `Balance` type.  
+**to-do**: Explain `BalanceOf<T>` and its relation with `Balance`, `Currency` and the runtime.  

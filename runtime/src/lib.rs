@@ -272,6 +272,7 @@ impl pallet_sudo::Config for Runtime {
 // }
 
 impl pallet_kitties::Config for Runtime {
+	type Currency = Balances;
 	type Event = Event;
 	type KittyIndex = u32;
 	type Randomness = RandomnessCollectiveFlip;

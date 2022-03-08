@@ -1,4 +1,4 @@
-use super::{Error, Kitty, KittyGender};
+use super::{Error, Kitty, KittyGender, KittyPrices};
 use crate::mock::*;
 
 use frame_support::{assert_noop, assert_ok};
@@ -136,5 +136,45 @@ fn should_not_transfer_to_self() {
 
 		assert_eq!(KittiesModule::kitties(100, 0), Some(kitty));
 		assert_eq!(System::events().len(), 0);
+	});
+}
+
+#[test]
+fn should_set_kitty_price() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(KittiesModule::create(Origin::signed(100)));
+
+		// Set the price to `Some(10)`
+		assert_ok!(KittiesModule::set_price(Origin::signed(100), 0, Some(10)));
+
+		assert_eq!(KittiesModule::kitty_prices(0), Some(10));
+
+		System::assert_last_event(Event::KittiesModule(crate::Event::KittyPriceUpdated(
+			100,
+			0,
+			Some(10),
+		)));
+
+		// Set the price to `None` (delist)
+		assert_ok!(KittiesModule::set_price(Origin::signed(100), 0, None));
+
+		assert_eq!(KittiesModule::kitty_prices(0), None);
+		assert_eq!(KittyPrices::<Test>::contains_key(0), false);
+
+		System::assert_last_event(Event::KittiesModule(crate::Event::KittyPriceUpdated(
+			100, 0, None,
+		)));
+	});
+}
+
+#[test]
+fn should_not_set_price_when_kitty_not_owned() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(KittiesModule::create(Origin::signed(100)));
+
+		assert_noop!(
+			KittiesModule::set_price(Origin::signed(101), 0, Some(10)),
+			Error::<Test>::NotOwner
+		);
 	});
 }
