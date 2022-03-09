@@ -1,5 +1,10 @@
 # My Notes on the `ic-kitties` Project
-This document attempts to describe my experience and thoughts on building this project.
+This document attempts to describe my experience and thoughts on building this project.  
+### :small_red_triangle_down: Important note
+- This project is from the [Substrate Runtime Developer Academy](https://www.industryconnect.org/substrate-runtime-developer-academy/) course from Industry Connect.  
+I wrote the `Kitties` pallet from scratch using the template project, **but** all the code was already available in advance on Github provided by the course.  
+- I'm also planning to review and add some codes from the [`Kitties` tutorial](https://www.youtube.com/watch?v=NrG3co6UWEg) presented by [Parity Technologies](https://www.parity.io/) in ETHDenver 2022.  
+<br />
 
 ## Step 1. Build and Deploy `substrate-node-template`
 The first thing I did was use [substrate-developer-hub/substrate-node-template](https://github.com/substrate-developer-hub/substrate-node-template) as a template for my new [ic-kitties](https://github.com/nobuyoshiAquino/ic-kitties) repository.  
@@ -103,15 +108,31 @@ I also added unit tests.
 <br />
 
 ### Implement `set_price` and `buy` kitty calls :small_blue_diamond:
-In the beginning, I said that users would be able to sell and buy kitties too. So now I'm going to implement the last features of the `Kitties` pallet, and the user stories are the following:  
+Now I'm going to implement the last features of the `Kitties` pallet, and the user stories are the following:  
 
 4. "*As a user, I want to put my kitties on sale.*"  
     4.1. User must set a price for the kitty to make it available to the public.
 
 5. "*As a user, I want to take my kitty off the market.*"  
 6. "*As a user, I want to buy a kitty.*"
+    6.1. Users can only buy listed kitties. In other words, users can't buy kitties that are not for sale.  
+    6.2. Users must not be allowed to buy their own listed kitty.  
+    6.3. User's bids lower than the seller's request price must result in an error.
 
 I implemented requirements 4 and 5 in the same `set_price` call. A user can call `set_price` to set a kitty's price and make it available. If the kitty is already on sale, the user can either update its price or delist it passing `None` as the price.
 
 To keep track of the kitties on sale, I created the `KittyPrices` storage map that has the kitty's id as key and the price as value. This price value is a `Balance` type.  
 **to-do**: Explain `BalanceOf<T>` and its relation with `Balance`, `Currency` and the runtime.  
+
+For requirement 6, the `buy` call, I had to update the `KittyPrices` and `Kitties` maps.  
+First, the function had to delete the listed kitty entry on `KittyPrices`. Then in the `Kitties` map, the entry with the old owner (seller) is also deleted. Finally, a new entry with the buyer's id is created. I didn't like the nested `try_mutate_exists` in the function. I'll refactor it later.  
+Items 6.1., 6.2. and 6.3. are covered, and error messages: `NotForSale`, `BuyerIsSeller` and `BidPriceTooLow` are thrown, respectively.  
+Events and unit tests for `set_price` and `buy` are implemented too.  
+<br />
+
+### Weights :stopwatch:
+*Status: In progress...*  
+<br />
+
+### Open Runtime Module Library (ORML)
+*Status: pending*

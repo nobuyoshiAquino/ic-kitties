@@ -3,8 +3,8 @@
 use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	pallet_prelude::{DispatchError, RuntimeDebug},
-	traits::{Currency, Randomness},
-	Parameter,
+	traits::{Currency, ExistenceRequirement, Randomness},
+	transactional, Parameter,
 };
 use scale_info::TypeInfo;
 use sp_io::hashing::blake2_128;
@@ -80,6 +80,8 @@ pub mod pallet {
 		KittyTransferred(T::AccountId, T::AccountId, T::KittyIndex),
 		/// The price for a kitty has been updated. \[owner, kitty_id, price\]
 		KittyPriceUpdated(T::AccountId, T::KittyIndex, Option<BalanceOf<T>>),
+		/// A kitty is sold. \[seller, buyer, kitty_id, price\]
+		KittySold(T::AccountId, T::AccountId, T::KittyIndex, BalanceOf<T>),
 	}
 
 	// --- ERRORS ---
@@ -88,6 +90,9 @@ pub mod pallet {
 		InvalidKittyId,
 		SameGender,
 		NotOwner,
+		BuyerIsSeller,
+		NotForSale,
+		BidPriceTooLow,
 	}
 
 	// --- CALLS ---
@@ -176,6 +181,45 @@ pub mod pallet {
 			Self::deposit_event(Event::KittyPriceUpdated(sender, kitty_id, new_price));
 
 			Ok(())
+		}
+
+		#[pallet::weight(1000)]
+		#[transactional]
+		pub fn buy(
+			origin: OriginFor<T>,
+			seller: T::AccountId,
+			kitty_id: T::KittyIndex,
+			bid_price: BalanceOf<T>,
+		) -> DispatchResult {
+			let buyer = ensure_signed(origin)?;
+
+			ensure!(buyer != seller, Error::<T>::BuyerIsSeller);
+
+			KittyPrices::<T>::try_mutate_exists(kitty_id, |price| -> DispatchResult {
+				let price = price.take().ok_or(Error::<T>::NotForSale)?;
+
+				ensure!(bid_price >= price, Error::<T>::BidPriceTooLow);
+
+				Kitties::<T>::try_mutate_exists(&seller, kitty_id, |kitty| -> DispatchResult {
+					let kitty = kitty.take().ok_or(Error::<T>::InvalidKittyId)?;
+
+					Kitties::<T>::insert(&buyer, kitty_id, kitty);
+
+					Self::deposit_event(Event::KittyTransferred(
+						seller.clone(),
+						buyer.clone(),
+						kitty_id,
+					));
+
+					Ok(())
+				})?;
+
+				T::Currency::transfer(&buyer, &seller, price, ExistenceRequirement::KeepAlive)?;
+
+				Self::deposit_event(Event::KittySold(seller, buyer, kitty_id, price));
+
+				Ok(())
+			})
 		}
 	}
 }

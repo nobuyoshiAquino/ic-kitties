@@ -1,4 +1,4 @@
-use super::{Error, Kitty, KittyGender, KittyPrices};
+use super::{Error, Kitties, Kitty, KittyGender, KittyPrices};
 use crate::mock::*;
 
 use frame_support::{assert_noop, assert_ok};
@@ -175,6 +175,82 @@ fn should_not_set_price_when_kitty_not_owned() {
 		assert_noop!(
 			KittiesModule::set_price(Origin::signed(101), 0, Some(10)),
 			Error::<Test>::NotOwner
+		);
+	});
+}
+
+#[test]
+fn should_buy() {
+	new_test_ext().execute_with(|| {
+		// User#100 create a kitty, and then set a price for it.
+		assert_ok!(KittiesModule::create(Origin::signed(100)));
+		assert_ok!(KittiesModule::set_price(Origin::signed(100), 0, Some(333)));
+
+		// User#200 bought the kitty from User#100
+		assert_ok!(KittiesModule::buy(Origin::signed(200), 100, 0, 333));
+
+		assert_eq!(KittyPrices::<Test>::contains_key(0), false);
+		assert_eq!(Kitties::<Test>::contains_key(200, 0), true);
+
+		assert_eq!(Balances::free_balance(100), 333);
+		assert_eq!(Balances::free_balance(200), 167);
+
+		System::assert_last_event(Event::KittiesModule(crate::Event::KittySold(100, 200, 0, 333)));
+	});
+}
+
+#[test]
+fn should_fail_buy_from_self() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(KittiesModule::create(Origin::signed(100)));
+		assert_ok!(KittiesModule::set_price(Origin::signed(100), 0, Some(333)));
+
+		assert_noop!(
+			KittiesModule::buy(Origin::signed(100), 100, 0, 333),
+			Error::<Test>::BuyerIsSeller
+		);
+	});
+}
+
+#[test]
+fn should_fail_buy_when_kitty_not_listed() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(KittiesModule::create(Origin::signed(100)));
+
+		assert_noop!(
+			KittiesModule::buy(Origin::signed(200), 100, 0, 333),
+			Error::<Test>::NotForSale
+		);
+
+		assert_noop!(
+			KittiesModule::buy(Origin::signed(200), 100, 1, 333),
+			Error::<Test>::NotForSale
+		);
+	});
+}
+
+#[test]
+fn should_fail_buy_when_bid_price_low() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(KittiesModule::create(Origin::signed(100)));
+		assert_ok!(KittiesModule::set_price(Origin::signed(100), 0, Some(333)));
+
+		assert_noop!(
+			KittiesModule::buy(Origin::signed(200), 100, 0, 300),
+			Error::<Test>::BidPriceTooLow
+		);
+	});
+}
+
+#[test]
+fn should_fail_buy_when_insufficient_balance() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(KittiesModule::create(Origin::signed(100)));
+		assert_ok!(KittiesModule::set_price(Origin::signed(100), 0, Some(600)));
+
+		assert_noop!(
+			KittiesModule::buy(Origin::signed(200), 100, 0, 600),
+			pallet_balances::Error::<Test, _>::InsufficientBalance
 		);
 	});
 }
