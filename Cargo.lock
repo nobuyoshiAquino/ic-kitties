@@ -3877,6 +3877,7 @@ dependencies = [
 name = "pallet-kitties"
 version = "4.0.0-dev"
 dependencies = [
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
  "pallet-balances",
@@ -3886,6 +3887,7 @@ dependencies = [
  "sp-core",
  "sp-io",
  "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]

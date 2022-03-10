@@ -40,6 +40,8 @@ use pallet_transaction_payment::CurrencyAdapter;
 pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
 
+mod weights;
+
 /// Import the template pallet.
 // pub use pallet_template;
 
@@ -276,6 +278,7 @@ impl pallet_kitties::Config for Runtime {
 	type Event = Event;
 	type KittyIndex = u32;
 	type Randomness = RandomnessCollectiveFlip;
+	type WeightInfo = weights::pallet_kitties::WeightInfo<Runtime>;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
@@ -339,6 +342,7 @@ mod benches {
 		[pallet_balances, Balances]
 		[pallet_timestamp, Timestamp]
 		// [pallet_template, TemplateModule]
+		[pallet_kitties, Kitties]
 	);
 }
 

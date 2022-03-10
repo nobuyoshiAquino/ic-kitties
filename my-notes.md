@@ -131,8 +131,34 @@ Events and unit tests for `set_price` and `buy` are implemented too.
 <br />
 
 ### Weights :stopwatch:
-*Status: In progress...*  
+First, I added the `.maintain/frame-weight-template.hbs` file. I copied it from the [Substrate repository](https://github.com/paritytech/substrate/blob/master/.maintain/frame-weight-template.hbs). It will be needed to run the benchmark command below.
+
+I added the benchmarks for all extrinsic calls in `pallets/kitties/src/benchmarking.rs`. Then, I ran the following command:
+
+```
+cargo run --release --features runtime-benchmarks \
+-- benchmark \
+--pallet pallet_kitties \
+--extrinsic '*' \
+--template=.maintain/frame-weight-template.hbs \
+--execution=wasm \
+--wasm-execution=compiled \
+--output pallets/kitties/src/weights.rs
+```
+This command created the `pallets/kitties/src/weights.rs` with the weight functions.  
+
+Here is the command to generate `runtime/src/weights/pallet_kitties.rs`. Note that `--template` flag is omitted.
+
+```
+cargo run --release --features runtime-benchmarks \
+-- benchmark \
+--pallet pallet_kitties \
+--extrinsic '*' \
+--execution=wasm \
+--wasm-execution=compiled \
+--output runtime/src/weights/pallet_kitties.rs
+```
 <br />
 
 ### Open Runtime Module Library (ORML)
-*Status: pending*
+*Status: In progress...*

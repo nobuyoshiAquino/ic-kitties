@@ -80,6 +80,7 @@ impl pallet_kitties::Config for Test {
 	type Event = Event;
 	type KittyIndex = u32;
 	type Randomness = MockRandom;
+	type WeightInfo = ();
 }
 
 // Build genesis storage according to the mock runtime.

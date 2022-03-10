@@ -21,6 +21,12 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
+
+mod weights;
+pub use weights::WeightInfo;
+
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
@@ -37,6 +43,7 @@ pub mod pallet {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 		type KittyIndex: AtLeast32BitUnsigned + Bounded + Copy + Default + MaxEncodedLen + Parameter;
 		type Randomness: Randomness<Self::Hash, Self::BlockNumber>;
+		type WeightInfo: WeightInfo;
 	}
 
 	// --- STORAGE ---
@@ -99,7 +106,7 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		/// Create a new kitty
-		#[pallet::weight(1000)]
+		#[pallet::weight(T::WeightInfo::create())]
 		pub fn create(origin: OriginFor<T>) -> DispatchResult {
 			let sender = ensure_signed(origin)?;
 
@@ -116,7 +123,7 @@ pub mod pallet {
 		}
 
 		/// Breed kitties to create a new kitty
-		#[pallet::weight(1000)]
+		#[pallet::weight(T::WeightInfo::breed())]
 		pub fn breed(
 			origin: OriginFor<T>,
 			kitty1_id: T::KittyIndex,
@@ -142,7 +149,7 @@ pub mod pallet {
 		}
 
 		/// Transfer a kitty to a new owner
-		#[pallet::weight(1000)]
+		#[pallet::weight(T::WeightInfo::transfer())]
 		pub fn transfer(
 			origin: OriginFor<T>,
 			to: T::AccountId,
@@ -167,7 +174,7 @@ pub mod pallet {
 
 		/// Set a price for a kitty.
 		/// Passing `new_price` as `None` will delist the kitty.
-		#[pallet::weight(1000)]
+		#[pallet::weight(T::WeightInfo::set_price())]
 		pub fn set_price(
 			origin: OriginFor<T>,
 			kitty_id: T::KittyIndex,
@@ -183,7 +190,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(1000)]
+		#[pallet::weight(T::WeightInfo::buy())]
 		#[transactional]
 		pub fn buy(
 			origin: OriginFor<T>,
